@@ -155,8 +155,8 @@
         // Email/Password Sign Up
         emailSignupForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const email = email.value;
-            const password = password.value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             createUserWithEmailAndPassword(auth, email, password)
                 .catch((error) => {
                     const errorCode = error.code;
