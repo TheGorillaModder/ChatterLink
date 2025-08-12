@@ -3,67 +3,149 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ChatterLink - Demo</title>
+<title>ChatterLink</title>
 <style>
-  body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
-  #app { max-width: 600px; margin: auto; }
-  .room-link { display: block; margin: 10px 0; color: blue; cursor: pointer; text-decoration: underline; }
-  #setup-popup {
-    position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: white; padding: 20px; border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    display: none;
-    width: 300px;
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: #121212;
+    color: #eee;
   }
-  #setup-popup label { display: block; margin-top: 10px; font-weight: bold; }
+  #app {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+  }
+  #login-status {
+    margin-bottom: 15px;
+  }
+  button {
+    cursor: pointer;
+    margin-right: 10px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+  }
+  #sign-in-google {
+    background: #4285F4;
+    color: white;
+  }
+  #sign-out {
+    background: #db4437;
+    color: white;
+  }
+  a.room-link {
+    display: inline-block;
+    margin: 10px 10px 10px 0;
+    padding: 10px 14px;
+    background: #333;
+    color: #eee;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+  a.room-link:hover {
+    background: #555;
+  }
+
+  /* Popup styles */
+  #setup-popup {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #222;
+    padding: 20px 25px;
+    border-radius: 8px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.9);
+    width: 320px;
+    display: none;
+    z-index: 1000;
+  }
+  #setup-popup label {
+    display: block;
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: 600;
+  }
   #setup-popup input, #setup-popup textarea, #setup-popup select {
-    width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box;
+    width: 100%;
+    margin-top: 6px;
+    padding: 7px 10px;
+    background: #111;
+    border: 1px solid #444;
+    color: #eee;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  #setup-popup textarea {
+    resize: vertical;
+  }
+  #setup-popup .btn-group {
+    margin-top: 20px;
+    text-align: right;
   }
   #setup-popup button {
-    margin-top: 15px; padding: 8px 12px; font-weight: bold;
-    cursor: pointer;
+    padding: 8px 14px;
+    font-weight: bold;
   }
-  #save-btn { background-color: #28a745; color: white; border: none; margin-right: 10px; }
-  #cancel-btn { background-color: #dc3545; color: white; border: none; }
-  #login-status { margin-bottom: 20px; }
+  #save-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    margin-right: 10px;
+  }
+  #cancel-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+  }
+  /* Overlay behind popup */
+  #popup-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    z-index: 900;
+  }
 </style>
 </head>
 <body>
+
 <div id="app">
-  <h1>Welcome to ChatterLink Demo</h1>
+  <h1>ChatterLink</h1>
   <div id="login-status">Checking login status...</div>
 
   <button id="sign-in-google">Sign In with Google</button>
   <button id="sign-out" style="display:none;">Sign Out</button>
 
-  <h2>Rooms</h2>
+  <h2>Available Rooms</h2>
   <a href="#" class="room-link" data-room-id="room1">Join Room 1</a>
   <a href="#" class="room-link" data-room-id="room2">Join Room 2</a>
   <a href="#" class="room-link" data-room-id="room3">Join Room 3</a>
 </div>
 
-<!-- Setup Account Popup -->
-<div id="setup-popup">
-  <h3>Set Up Your Account</h3>
-  <label for="username">Username:</label>
-  <input type="text" id="username" placeholder="Your username" />
+<div id="popup-overlay"></div>
 
-  <label for="bio">Bio:</label>
+<div id="setup-popup" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+  <h3 id="setup-title">Set Up Your Account</h3>
+  <label for="username">Username</label>
+  <input id="username" type="text" autocomplete="username" placeholder="Enter your username" />
+
+  <label for="bio">Bio</label>
   <textarea id="bio" rows="3" placeholder="Tell us about yourself"></textarea>
 
-  <label for="location">Location:</label>
-  <input type="text" id="location" placeholder="Where are you from?" />
+  <label for="location">Location</label>
+  <input id="location" type="text" placeholder="Where are you from?" />
 
-  <label for="status">Status:</label>
-  <select id="status">
+  <label for="status">Status</label>
+  <select id="status" autocomplete="off">
     <option value="online">Online</option>
     <option value="idle">Idle</option>
     <option value="dnd">Do Not Disturb</option>
     <option value="offline">Offline</option>
   </select>
 
-  <div style="margin-top:15px; text-align:right;">
+  <div class="btn-group">
     <button id="save-btn">Save</button>
     <button id="cancel-btn">Cancel</button>
   </div>
@@ -71,8 +153,19 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCm1cAUqlA-w2rp5aoDYJEj_sGPqa0SjGs",
@@ -88,54 +181,71 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // UI Elements
-  const loginStatus = document.getElementById('login-status');
-  const signInBtn = document.getElementById('sign-in-google');
-  const signOutBtn = document.getElementById('sign-out');
+  // UI elements
+  const loginStatus = document.getElementById("login-status");
+  const signInBtn = document.getElementById("sign-in-google");
+  const signOutBtn = document.getElementById("sign-out");
 
-  const setupPopup = document.getElementById('setup-popup');
-  const saveBtn = document.getElementById('save-btn');
-  const cancelBtn = document.getElementById('cancel-btn');
-  const usernameInput = document.getElementById('username');
-  const bioInput = document.getElementById('bio');
-  const locationInput = document.getElementById('location');
-  const statusSelect = document.getElementById('status');
+  const setupPopup = document.getElementById("setup-popup");
+  const overlay = document.getElementById("popup-overlay");
+
+  const saveBtn = document.getElementById("save-btn");
+  const cancelBtn = document.getElementById("cancel-btn");
+
+  const usernameInput = document.getElementById("username");
+  const bioInput = document.getElementById("bio");
+  const locationInput = document.getElementById("location");
+  const statusSelect = document.getElementById("status");
 
   let currentUser = null;
 
-  // Sign in with Google
-  signInBtn.addEventListener('click', async () => {
+  function showSetupPopup() {
+    setupPopup.style.display = "block";
+    overlay.style.display = "block";
+  }
+  function hideSetupPopup() {
+    setupPopup.style.display = "none";
+    overlay.style.display = "none";
+  }
+
+  signInBtn.addEventListener("click", async () => {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // onAuthStateChanged will handle UI updates
-    } catch (error) {
-      alert("Failed to sign in: " + error.message);
+    } catch (e) {
+      alert("Sign-in failed: " + e.message);
     }
   });
 
-  // Sign out
-  signOutBtn.addEventListener('click', async () => {
+  signOutBtn.addEventListener("click", async () => {
     await signOut(auth);
   });
 
-  // Handle auth state changes
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (user) {
-      loginStatus.textContent = `Signed in as: ${user.email}`;
+      loginStatus.textContent = `Signed in as ${user.email}`;
       signInBtn.style.display = "none";
       signOutBtn.style.display = "inline-block";
 
-      // Check if user has setup data
+      // Check if user data exists
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
 
       if (!userDocSnap.exists()) {
-        // Show setup popup if no data
+        // Show popup to set up profile
+        usernameInput.value = "";
+        bioInput.value = "";
+        locationInput.value = "";
+        statusSelect.value = "online";
         showSetupPopup();
       } else {
-        // Optionally load user data into UI here
+        // Load existing data into inputs (optional)
+        const data = userDocSnap.data();
+        usernameInput.value = data.username || "";
+        bioInput.value = data.bio || "";
+        locationInput.value = data.location || "";
+        statusSelect.value = data.status || "online";
         hideSetupPopup();
       }
     } else {
@@ -146,15 +256,7 @@
     }
   });
 
-  function showSetupPopup() {
-    setupPopup.style.display = 'block';
-  }
-
-  function hideSetupPopup() {
-    setupPopup.style.display = 'none';
-  }
-
-  saveBtn.addEventListener('click', async () => {
+  saveBtn.addEventListener("click", async () => {
     if (!currentUser) {
       alert("You must be signed in to save your profile.");
       return;
@@ -168,38 +270,38 @@
     const location = locationInput.value.trim();
     const status = statusSelect.value;
 
-    // Save to Firestore
     try {
       await setDoc(doc(db, "users", currentUser.uid), {
         username,
         bio,
         location,
-        status
+        status,
       });
       alert("Profile saved!");
       hideSetupPopup();
-    } catch (err) {
-      alert("Failed to save profile: " + err.message);
+    } catch (error) {
+      alert("Failed to save profile: " + error.message);
     }
   });
 
-  cancelBtn.addEventListener('click', () => {
+  cancelBtn.addEventListener("click", () => {
     hideSetupPopup();
   });
 
-  // Room joining logic: Only join if signed in
-  document.querySelectorAll('.room-link').forEach(link => {
-    link.addEventListener('click', (e) => {
+  // Room join links logic
+  document.querySelectorAll(".room-link").forEach((link) => {
+    link.addEventListener("click", (e) => {
       e.preventDefault();
       if (!currentUser) {
         alert("You must sign in to join a room.");
         return;
       }
       const roomId = link.dataset.roomId;
-      alert(`Joining room: ${roomId}`); 
-      // Replace alert with your room join logic
+      alert(`Joining room: ${roomId}`);
+      // TODO: Replace alert with actual room join code
     });
   });
 </script>
+
 </body>
 </html>
