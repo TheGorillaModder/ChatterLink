@@ -1,687 +1,205 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ChatterLink — Prototype</title>
-  <style>
-    :root{
-      --bg:#0f1724;
-      --panel:#0b1220;
-      --text:#e6eef8;
-      --muted:#9aa8bd;
-      --accent:#e53935;
-      --bubble:#1f2937;
-      --radius:12px;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      --font-size:15px;
-    }
-    [data-theme="light"]{
-      --bg:#f6f8fb;
-      --panel:#ffffff;
-      --text:#0b1220;
-      --muted:#556677;
-      --accent:#b71c1c;
-      --bubble:#f0f3f7;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      height:100vh;
-      display:flex;
-      gap:18px;
-      background:linear-gradient(180deg,var(--bg),#071022);
-      color:var(--text);
-      font-size:var(--font-size);
-    }
-    .sidebar{
-      width:300px;
-      background:var(--panel);
-      padding:18px;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand h1{margin:0;font-size:1.15rem;color:var(--accent)}
-    .profile{
-      display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02)
-    }
-    .avatar{
-      width:56px;height:56px;border-radius:10px;background:#223244;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--text)
-    }
-    .rooms{flex:1;overflow:auto;padding-right:6px}
-    .room-item{padding:10px;border-radius:8px;cursor:pointer;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-    .room-item:hover{background:rgba(255,255,255,0.02)}
-    .room-item.active{background:rgba(255,255,255,0.03);border-left:3px solid var(--accent);padding-left:8px}
-    .controls{display:flex;gap:8px}
-    .btn{background:var(--accent);border:none;padding:8px 10px;border-radius:8px;color:white;cursor:pointer}
-    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text)}
-    .main{
-      flex:1;display:flex;flex-direction:column;height:100vh;
-    }
-    .main-header{display:flex;align-items:center;justify-content:space-between;padding:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent)}
-    .chat{flex:1;display:flex;flex-direction:column;padding:18px;gap:12px;overflow:auto}
-    .messages{display:flex;flex-direction:column;gap:10px;max-width:900px}
-    .msg{display:flex;gap:10px;align-items:flex-end;max-width:75%}
-    .msg.me{margin-left:auto;flex-direction:row-reverse}
-    .bubble{background:var(--bubble);padding:10px 12px;border-radius:12px;position:relative}
-    .bubble.me{background:linear-gradient(180deg,var(--accent),#9e2222);color:white}
-    .meta{font-size:12px;color:var(--muted);margin-top:6px}
-    .input-area{display:flex;gap:8px;padding:12px;background:var(--panel);align-items:center}
-    .input-area input[type="text"]{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)}
-    .message-actions{display:flex;gap:8px;opacity:0.8}
-    .small{font-size:12px;color:var(--muted)}
-    .settings{padding:12px;background:var(--panel);border-radius:8px}
-    .hidden{display:none}
-    .reaction{cursor:pointer;padding:4px;border-radius:6px}
-    .reaction.selected{background:rgba(255,255,255,0.06)}
-    @media(max-width:900px){
-      .sidebar{display:none}
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ChatterLink - Demo</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f0f0f0; }
+  #app { max-width: 600px; margin: auto; }
+  .room-link { display: block; margin: 10px 0; color: blue; cursor: pointer; text-decoration: underline; }
+  #setup-popup {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: white; padding: 20px; border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    display: none;
+    width: 300px;
+  }
+  #setup-popup label { display: block; margin-top: 10px; font-weight: bold; }
+  #setup-popup input, #setup-popup textarea, #setup-popup select {
+    width: 100%; padding: 6px; margin-top: 4px; box-sizing: border-box;
+  }
+  #setup-popup button {
+    margin-top: 15px; padding: 8px 12px; font-weight: bold;
+    cursor: pointer;
+  }
+  #save-btn { background-color: #28a745; color: white; border: none; margin-right: 10px; }
+  #cancel-btn { background-color: #dc3545; color: white; border: none; }
+  #login-status { margin-bottom: 20px; }
+</style>
 </head>
-<body data-theme="dark">
+<body>
+<div id="app">
+  <h1>Welcome to ChatterLink Demo</h1>
+  <div id="login-status">Checking login status...</div>
 
-  <div class="sidebar" id="sidebar">
-    <div class="brand">
-      <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--accent),#ff6b6b);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700">CL</div>
-      <h1>ChatterLink</h1>
-    </div>
+  <button id="sign-in-google">Sign In with Google</button>
+  <button id="sign-out" style="display:none;">Sign Out</button>
 
-    <div id="authSection">
-      <div class="profile" id="profileBox">
-        <div class="avatar" id="avatar">?</div>
-        <div style="flex:1">
-          <div id="displayName" style="font-weight:700">Not signed in</div>
-          <div class="small" id="displayEmail">Please sign in</div>
-        </div>
-      </div>
+  <h2>Rooms</h2>
+  <a href="#" class="room-link" data-room-id="room1">Join Room 1</a>
+  <a href="#" class="room-link" data-room-id="room2">Join Room 2</a>
+  <a href="#" class="room-link" data-room-id="room3">Join Room 3</a>
+</div>
 
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="btn" id="googleSignIn">Sign in with Google</button>
-        <button class="btn secondary" id="emailSignInBtn">Email</button>
-      </div>
-    </div>
+<!-- Setup Account Popup -->
+<div id="setup-popup">
+  <h3>Set Up Your Account</h3>
+  <label for="username">Username:</label>
+  <input type="text" id="username" placeholder="Your username" />
 
-    <div style="margin-top:12px;display:flex;gap:8px">
-      <input type="text" id="newRoomName" placeholder="New room name" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)" />
-      <button class="btn" id="createRoomBtn">Create</button>
-    </div>
+  <label for="bio">Bio:</label>
+  <textarea id="bio" rows="3" placeholder="Tell us about yourself"></textarea>
 
-    <div style="margin-top:8px" class="settings">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><strong>Theme</strong></div>
-        <div>
-          <select id="themeSelect">
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-          </select>
-        </div>
-      </div>
-      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
-        <div><strong>Accent</strong></div>
-        <input id="accentColor" type="color" value="#e53935" style="background:transparent;border:none" />
-      </div>
-      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
-        <div><strong>Font size</strong></div>
-        <input id="fontSize" type="range" min="13" max="20" value="15" />
-      </div>
-    </div>
+  <label for="location">Location:</label>
+  <input type="text" id="location" placeholder="Where are you from?" />
 
-    <h3 style="margin-bottom:6px;margin-top:8px">Rooms</h3>
-    <div class="rooms" id="roomsList"></div>
+  <label for="status">Status:</label>
+  <select id="status">
+    <option value="online">Online</option>
+    <option value="idle">Idle</option>
+    <option value="dnd">Do Not Disturb</option>
+    <option value="offline">Offline</option>
+  </select>
 
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn secondary" id="signOutBtn">Sign out</button>
-      <button class="btn secondary" id="profileEditBtn">Edit</button>
-    </div>
+  <div style="margin-top:15px; text-align:right;">
+    <button id="save-btn">Save</button>
+    <button id="cancel-btn">Cancel</button>
   </div>
-
-  <div class="main">
-    <div class="main-header">
-      <div>
-        <div id="roomTitle">No room selected</div>
-        <div id="roomSub" class="small">Select or create a room to start chatting</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <div id="roomOnline" class="small">—</div>
-        <div class="controls">
-          <button class="btn secondary hidden" id="leaveRoomBtn">Leave</button>
-          <button class="btn" id="copyLinkBtn">Copy Link</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="chat" id="chatArea">
-      <div class="messages" id="messages"></div>
-    </div>
-
-    <div class="input-area">
-      <div style="display:flex;gap:8px;align-items:center;width:100%">
-        <input id="messageInput" type="text" placeholder="Write a message..." />
-        <div class="message-actions">
-          <button class="btn secondary" id="replyBtn" title="Reply">↩</button>
-          <button class="btn secondary" id="editBtn" title="Edit">✎</button>
-        </div>
-      </div>
-      <button class="btn" id="sendBtn">Send</button>
-    </div>
-  </div>
-
-  <!-- Email modal (simple) -->
-  <div id="emailModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center">
-    <div style="background:var(--panel);padding:18px;border-radius:10px;width:320px">
-      <h3>Sign in with Email</h3>
-      <input id="emailField" placeholder="Email" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;background:transparent;color:var(--text)" />
-      <input id="passwordField" type="password" placeholder="Password" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;background:transparent;color:var(--text)" />
-      <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
-        <button class="btn secondary" id="emailCancel">Cancel</button>
-        <button class="btn" id="emailSubmit">Submit</button>
-      </div>
-      <div style="margin-top:8px" class="small">Tip: use sign up to create new account</div>
-    </div>
-  </div>
-
-  <!-- Profile edit modal -->
-  <div id="profileModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center">
-    <div style="background:var(--panel);padding:18px;border-radius:10px;width:420px">
-      <h3>Edit Profile</h3>
-      <input id="editName" placeholder="Display name" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;background:transparent;color:var(--text)" />
-      <input id="editBio" placeholder="Bio" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;background:transparent;color:var(--text)" />
-      <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
-        <button class="btn secondary" id="profileCancel">Cancel</button>
-        <button class="btn" id="profileSave">Save</button>
-      </div>
-    </div>
-  </div>
+</div>
 
 <script type="module">
-/* =========================
-  ChatterLink prototype
-  Uses Firebase Auth and Firestore (v12.x)
-  Features: Google/email auth, rooms, messages, reactions, edits, deletes,
-  typing indicator, read receipts, per-user settings (theme, accent, font size).
-  NOTE: No storage for files (Firestore only as requested).
-==========================*/
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, onSnapshot, query, orderBy, serverTimestamp, updateDoc, arrayUnion, arrayRemove, deleteDoc, where, limit } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-// ---------- FIREBASE CONFIG (provided) ----------
-const firebaseConfig = {
-  apiKey: "AIzaSyCm1cAUqlA-w2rp5aoDYJEj_sGPqa0SjGs",
-  authDomain: "chatterlink-2b1b0.firebaseapp.com",
-  projectId: "chatterlink-2b1b0",
-  storageBucket: "chatterlink-2b1b0.firebasestorage.app",
-  messagingSenderId: "103060805767",
-  appId: "1:103060805767:web:f1418d6c691bb1a7070022",
-  measurementId: "G-83ZPCY37ST"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// ---------- UI refs ----------
-const googleSignInBtn = document.getElementById('googleSignIn');
-const emailSignInBtn = document.getElementById('emailSignInBtn');
-const signOutBtn = document.getElementById('signOutBtn');
-const profileBox = document.getElementById('profileBox');
-const avatarEl = document.getElementById('avatar');
-const displayNameEl = document.getElementById('displayName');
-const displayEmailEl = document.getElementById('displayEmail');
-const roomsList = document.getElementById('roomsList');
-const createRoomBtn = document.getElementById('createRoomBtn');
-const newRoomName = document.getElementById('newRoomName');
-const roomTitle = document.getElementById('roomTitle');
-const roomSub = document.getElementById('roomSub');
-const messagesEl = document.getElementById('messages');
-const messageInput = document.getElementById('messageInput');
-const sendBtn = document.getElementById('sendBtn');
-const themeSelect = document.getElementById('themeSelect');
-const accentColor = document.getElementById('accentColor');
-const fontSizeInput = document.getElementById('fontSize');
-const emailModal = document.getElementById('emailModal');
-const emailSubmit = document.getElementById('emailSubmit');
-const emailCancel = document.getElementById('emailCancel');
-const emailField = document.getElementById('emailField');
-const passwordField = document.getElementById('passwordField');
-const profileModal = document.getElementById('profileModal');
-const profileEditBtn = document.getElementById('profileEditBtn');
-const profileSave = document.getElementById('profileSave');
-const profileCancel = document.getElementById('profileCancel');
-const editName = document.getElementById('editName');
-const editBio = document.getElementById('editBio');
-const copyLinkBtn = document.getElementById('copyLinkBtn');
-
-let currentUser = null;
-let currentRoom = null;
-let messagesUnsub = null;
-let roomsUnsub = null;
-let typingTimeout = null;
-
-// ---------- Helpers ----------
-function el(tag, props={}, ...children){
-  const e = document.createElement(tag);
-  Object.assign(e, props);
-  for(const c of children) if(typeof c === 'string') e.appendChild(document.createTextNode(c)); else if(c) e.appendChild(c);
-  return e;
-}
-function uid(){ return currentUser ? currentUser.uid : null; }
-
-// ---------- AUTH ----------
-googleSignInBtn.onclick = async () => {
-  const provider = new GoogleAuthProvider();
-  try {
-    await signInWithPopup(auth, provider);
-  } catch(err){
-    alert('Error signing in: '+err.message);
-  }
-};
-emailSignInBtn.onclick = ()=> emailModal.classList.remove('hidden');
-emailCancel.onclick = ()=> emailModal.classList.add('hidden');
-emailSubmit.onclick = async () => {
-  const email = emailField.value.trim();
-  const pass = passwordField.value;
-  if(!email || !pass) return alert('enter both');
-  // If the account doesn't exist create it (simple flow)
-  try {
-    // Attempt sign in first
-    await signInWithEmailAndPassword(auth, email, pass);
-    emailModal.classList.add('hidden');
-  } catch(e){
-    // If sign-in failed try create
-    try {
-      await createUserWithEmailAndPassword(auth, email, pass);
-      emailModal.classList.add('hidden');
-    } catch(err){
-      alert('Auth error: '+err.message);
-    }
-  }
-};
-
-signOutBtn.onclick = async ()=> {
-  await signOut(auth);
-};
-
-// When auth state changes set up user doc if needed
-onAuthStateChanged(auth, async (user)=>{
-  currentUser = user;
-  if(!user){
-    displayNameEl.textContent = 'Not signed in';
-    displayEmailEl.textContent = 'Please sign in';
-    avatarEl.textContent = '?';
-    // clear UI
-    roomsList.innerHTML = '';
-    messagesEl.innerHTML = '';
-    roomTitle.textContent = 'No room selected';
-    roomSub.textContent = 'Select or create a room to start chatting';
-    // unsubscribe
-    if(roomsUnsub) roomsUnsub();
-    if(messagesUnsub) messagesUnsub();
-    return;
-  }
-  // Ensure user doc exists
-  const uref = doc(db, 'users', user.uid);
-  const snap = await getDoc(uref);
-  if(!snap.exists()){
-    await setDoc(uref, {
-      displayName: user.displayName || ('User'+user.uid.substring(0,6)),
-      photoURL: user.photoURL || null,
-      bio: '',
-      createdAt: serverTimestamp(),
-      settings: { theme: 'dark', accent: '#e53935', fontSize: 15, bubbleStyle: 'rounded' },
-      isAdmin: false
-    });
-  }
-  const udoc = await getDoc(uref);
-  const data = udoc.data();
-  displayNameEl.textContent = data.displayName || user.displayName || 'No name';
-  displayEmailEl.textContent = user.email || '';
-  avatarEl.textContent = (data.photoURL) ? '' : (displayNameEl.textContent[0]||'?').toUpperCase();
-  if(data.photoURL){
-    avatarEl.style.backgroundImage = `url(${data.photoURL})`;
-    avatarEl.style.backgroundSize = 'cover';
-    avatarEl.textContent = '';
-  } else {
-    avatarEl.style.backgroundImage = '';
-  }
-  // apply settings
-  applySettings(data.settings || {});
-  // subscribe to rooms list
-  subscribeRooms();
-});
-
-// ---------- ROOMS ----------
-async function createRoom(name){
-  if(!currentUser) return alert('Sign in first');
-  if(!name) return;
-  const rcol = collection(db, 'rooms');
-  const rdoc = await addDoc(rcol, {
-    name,
-    createdAt: serverTimestamp(),
-    createdBy: uid(),
-    members: [uid()],
-    typing: {}, // map uid -> timestamp
-    lastMessage: null
-  });
-  newRoomName.value = '';
-  // join the new room
-  joinRoom(rdoc.id);
-}
-
-createRoomBtn.onclick = ()=> createRoom(newRoomName.value.trim());
-
-function subscribeRooms(){
-  const rcol = collection(db, 'rooms');
-  // unsubscribe old
-  if(roomsUnsub) roomsUnsub();
-  const q = query(rcol, orderBy('createdAt','desc'));
-  roomsUnsub = onSnapshot(q, (snap)=>{
-    roomsList.innerHTML = '';
-    snap.forEach(docSnap=>{
-      const r = docSnap.data();
-      const elRoom = el('div',{className:'room-item',onclick:()=> joinRoom(docSnap.id)});
-      if(currentRoom === docSnap.id) elRoom.classList.add('active');
-      elRoom.appendChild(el('div',{}, r.name || 'Unnamed'));
-      const meta = el('div',{className:'small'}, r.members ? (r.members.length+' members') : '--');
-      elRoom.appendChild(meta);
-      roomsList.appendChild(elRoom);
-    });
-  });
-}
-
-// ---------- JOIN ROOM ----------
-async function joinRoom(roomId){
-  if(!currentUser) { alert('Sign in first'); return; }
-  if(messagesUnsub) messagesUnsub();
-  currentRoom = roomId;
-  // ensure membership
-  const rref = doc(db, 'rooms', roomId);
-  await updateDoc(rref, { members: arrayUnion(uid()) }).catch(()=>{});
-  // show room title
-  const rdoc = await getDoc(rref);
-  const rdata = rdoc.exists() ? rdoc.data() : null;
-  roomTitle.textContent = rdata ? rdata.name : 'Room';
-  roomSub.textContent = 'Loading messages...';
-
-  // subscribe to messages
-  const mcol = collection(db, 'rooms', roomId, 'messages');
-  const mq = query(mcol, orderBy('createdAt','asc'));
-  messagesUnsub = onSnapshot(mq, async (snap)=>{
-    messagesEl.innerHTML = '';
-    const newMsgs = [];
-    for(const docSnap of snap.docs){
-      const md = docSnap.data();
-      newMsgs.push({id: docSnap.id, ...md});
-    }
-    renderMessages(newMsgs);
-    // mark messages as read by adding uid to readBy arrays (simple approach)
-    for(const msg of newMsgs){
-      if(!msg.readBy || !msg.readBy.includes(uid())){
-        const mref = doc(db, 'rooms', roomId, 'messages', msg.id);
-        updateDoc(mref, { readBy: arrayUnion(uid()) }).catch(()=>{});
-      }
-    }
-    roomSub.textContent = (rdata && rdata.members) ? (rdata.members.length+' members') : '';
-  });
-
-  // presence: set online in room doc (simple)
-  // Add a cleanup on close to remove membership? skipping for brevity
-  // Listen for typing statuses
-  subscribeRoomMeta(roomId);
-}
-
-let roomMetaUnsub = null;
-function subscribeRoomMeta(roomId){
-  if(roomMetaUnsub) roomMetaUnsub();
-  const rref = doc(db, 'rooms', roomId);
-  roomMetaUnsub = onSnapshot(rref, (snap)=>{
-    const d = snap.data();
-    if(!d) return;
-    // typing indicator
-    const typing = d.typing || {};
-    const typingUids = Object.keys(typing).filter(k=>{
-      const t = typing[k];
-      return (Date.now() - t) < 5000; // recent
-    });
-    const names = typingUids.filter(u=>u!==uid()).slice(0,3);
-    document.getElementById('roomOnline').textContent = names.length ? (names.join(', ') + ' typing...') : (d.members ? (d.members.length + ' members') : '');
-  });
-}
-
-// ---------- MESSAGES RENDER ----------
-function renderMessages(msgs){
-  messagesEl.innerHTML = '';
-  for(const m of msgs){
-    const me = (m.senderId === uid());
-    const wrap = el('div',{className: 'msg' + (me ? ' me' : '' )});
-    const bubble = el('div',{className:'bubble' + (me ? ' me' : '')});
-    // content
-    if(m.deleted){
-      bubble.appendChild(el('div',{style:'font-style:italic;color:var(--muted)'}, '[message deleted]'));
-    } else {
-      // reply quote
-      if(m.replyTo && m.replyText){
-        bubble.appendChild(el('div',{style:'font-size:12px;color:var(--muted);margin-bottom:6px;padding:6px;border-left:2px solid rgba(255,255,255,0.03)'}, m.replyText.slice(0,120)));
-      }
-      bubble.appendChild(el('div',{}, m.text));
-      if(m.edited) bubble.appendChild(el('div',{className:'small'}, 'edited'));
-    }
-
-    // meta line
-    const meta = el('div',{className:'meta'}, (m.senderName || 'User')+' • '+(m.createdAt ? new Date(m.createdAt.seconds*1000).toLocaleTimeString() : '...'));
-    bubble.appendChild(meta);
-
-    // reactions
-    const reactionsWrap = el('div',{style:'margin-top:6px;display:flex;gap:6px'});
-    if(m.reactions){
-      for(const [emoji, uids] of Object.entries(m.reactions)){
-        const rbtn = el('span',{className:'reaction' + (uids.includes(uid()) ? ' selected' : '') , onclick:()=> toggleReaction(m.id, emoji)}, `${emoji} ${uids.length}`);
-        reactionsWrap.appendChild(rbtn);
-      }
-    }
-    // quick reaction add buttons
-    ['👍','❤️','😂','😮'].forEach(em=>{
-      const quick = el('span',{className:'reaction', onclick:()=> toggleReaction(m.id, em)}, em);
-      reactionsWrap.appendChild(quick);
-    })
-    bubble.appendChild(reactionsWrap);
-
-    // actions (edit/delete/reply) shown only for message owner or admin
-    const actions = el('div',{style:'display:flex;gap:8px;margin-top:6px'});
-    if(me) actions.appendChild(el('button',{className:'btn secondary', onclick:()=> startEditMessage(m)}, 'Edit'));
-    if(me || m.isAdmin) actions.appendChild(el('button',{className:'btn secondary', onclick:()=> deleteMessage(m)}, 'Delete'));
-    actions.appendChild(el('button',{className:'btn secondary', onclick:()=> startReply(m)}, 'Reply'));
-    bubble.appendChild(actions);
-
-    wrap.appendChild(bubble);
-    messagesEl.appendChild(wrap);
-  }
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-// ---------- SEND MESSAGE ----------
-sendBtn.onclick = async ()=>{
-  const text = messageInput.value.trim();
-  if(!text || !currentRoom) return;
-  const mcol = collection(db, 'rooms', currentRoom, 'messages');
-  await addDoc(mcol, {
-    text,
-    senderId: uid(),
-    senderName: displayNameEl.textContent,
-    createdAt: serverTimestamp(),
-    edited: false,
-    deleted: false,
-    readBy: [],
-    reactions: {},
-    replyTo: (currentReply && currentReply.id) ? currentReply.id : null,
-    replyText: (currentReply && currentReply.text) ? currentReply.text : null
-  });
-  messageInput.value = '';
-  currentReply = null;
-  clearReplyUI();
-  // update room lastMessage quick
-  const rref = doc(db, 'rooms', currentRoom);
-  updateDoc(rref, { lastMessage: text, lastAt: serverTimestamp() }).catch(()=>{});
-};
-
-// message editing
-let currentEdit = null;
-function startEditMessage(m){
-  currentEdit = m;
-  messageInput.value = m.text;
-  messageInput.focus();
-  document.getElementById('editBtn').classList.add('active');
-}
-document.getElementById('editBtn').onclick = async ()=>{
-  if(!currentEdit) return alert('No message selected to edit');
-  const mref = doc(db, 'rooms', currentRoom, 'messages', currentEdit.id);
-  await updateDoc(mref, { text: messageInput.value.trim(), edited: true });
-  currentEdit = null;
-  messageInput.value = '';
-};
-
-// reply
-let currentReply = null;
-function startReply(m){
-  currentReply = {id:m.id, text:m.text};
-  // show small UI
-  const rUI = document.getElementById('replyBtn');
-  rUI.style.background = 'rgba(255,255,255,0.06)';
-  rUI.title = 'Replying to: '+m.text.slice(0,50);
-}
-function clearReplyUI(){
-  const rUI = document.getElementById('replyBtn');
-  rUI.style.background = '';
-  rUI.title = 'Reply';
-}
-
-// delete message (soft delete)
-async function deleteMessage(m){
-  if(!confirm('Delete message?')) return;
-  const mref = doc(db, 'rooms', currentRoom, 'messages', m.id);
-  await updateDoc(mref, { deleted: true, text: '' }).catch(()=>{});
-}
-
-// reactions toggle
-async function toggleReaction(messageId, emoji){
-  const mref = doc(db, 'rooms', currentRoom, 'messages', messageId);
-  const msnap = await getDoc(mref);
-  if(!msnap.exists()) return;
-  const data = msnap.data();
-  const reactions = data.reactions || {};
-  const arr = reactions[emoji] || [];
-  if(arr.includes(uid())){
-    // remove uid
-    await updateDoc(mref, { ['reactions.'+emoji]: arrayRemove(uid()) });
-  } else {
-    await updateDoc(mref, { ['reactions.'+emoji]: arrayUnion(uid()) });
-  }
-}
-
-// ---------- typing indicator (simple) ----------
-messageInput.addEventListener('input', ()=>{
-  setTypingStatus(true);
-  if(typingTimeout) clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(()=> setTypingStatus(false), 2000);
-});
-async function setTypingStatus(isTyping){
-  if(!currentRoom || !currentUser) return;
-  const rref = doc(db, 'rooms', currentRoom);
-  if(isTyping){
-    await updateDoc(rref, { ['typing.'+uid()]: Date.now() }).catch(()=>{});
-  } else {
-    // remove key by setting to null (Firestore can't delete map keys easily without full object, but we can set it to FieldValue.delete in advanced case)
-    const updateObj = {};
-    updateObj['typing.'+uid()] = null;
-    await updateDoc(rref, updateObj).catch(()=>{});
-  }
-}
-
-// ---------- read receipts handled above (add uid to readBy) ----------
-
-// ---------- PROFILE EDIT ----------
-profileEditBtn.onclick = async ()=>{
-  if(!currentUser) return alert('Sign in first');
-  const uref = doc(db, 'users', uid());
-  const usnap = await getDoc(uref);
-  const data = usnap.exists() ? usnap.data() : {};
-  editName.value = data.displayName || '';
-  editBio.value = data.bio || '';
-  profileModal.classList.remove('hidden');
-};
-profileCancel.onclick = ()=> profileModal.classList.add('hidden');
-profileSave.onclick = async ()=>{
-  const uref = doc(db, 'users', uid());
-  await updateDoc(uref, { displayName: editName.value, bio: editBio.value }).catch(()=>{});
-  profileModal.classList.add('hidden');
-};
-
-// ---------- SETTINGS (theme, accent, font size) ----------
-themeSelect.onchange = ()=> saveLocalSettings();
-accentColor.onchange = ()=> saveLocalSettings();
-fontSizeInput.oninput = ()=> {
-  document.documentElement.style.setProperty('--font-size', fontSizeInput.value+'px');
-  saveLocalSettings();
-};
-
-function applySettings(settings){
-  if(!settings) return;
-  document.body.setAttribute('data-theme', settings.theme || 'dark');
-  accentColor.value = settings.accent || '#e53935';
-  document.documentElement.style.setProperty('--accent', settings.accent || '#e53935');
-  fontSizeInput.value = settings.fontSize || 15;
-  document.documentElement.style.setProperty('--font-size', (settings.fontSize || 15)+'px');
-}
-async function saveLocalSettings(){
-  const settings = {
-    theme: themeSelect.value,
-    accent: accentColor.value,
-    fontSize: parseInt(fontSizeInput.value,10)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCm1cAUqlA-w2rp5aoDYJEj_sGPqa0SjGs",
+    authDomain: "chatterlink-2b1b0.firebaseapp.com",
+    projectId: "chatterlink-2b1b0",
+    storageBucket: "chatterlink-2b1b0.firebasestorage.app",
+    messagingSenderId: "103060805767",
+    appId: "1:103060805767:web:f1418d6c691bb1a7070022",
+    measurementId: "G-83ZPCY37ST"
   };
-  document.documentElement.style.setProperty('--accent', settings.accent);
-  document.body.setAttribute('data-theme', settings.theme);
-  // store to user doc
-  if(currentUser){
-    const uref = doc(db, 'users', uid());
-    await updateDoc(uref, { settings }).catch(()=>{});
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // UI Elements
+  const loginStatus = document.getElementById('login-status');
+  const signInBtn = document.getElementById('sign-in-google');
+  const signOutBtn = document.getElementById('sign-out');
+
+  const setupPopup = document.getElementById('setup-popup');
+  const saveBtn = document.getElementById('save-btn');
+  const cancelBtn = document.getElementById('cancel-btn');
+  const usernameInput = document.getElementById('username');
+  const bioInput = document.getElementById('bio');
+  const locationInput = document.getElementById('location');
+  const statusSelect = document.getElementById('status');
+
+  let currentUser = null;
+
+  // Sign in with Google
+  signInBtn.addEventListener('click', async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      // onAuthStateChanged will handle UI updates
+    } catch (error) {
+      alert("Failed to sign in: " + error.message);
+    }
+  });
+
+  // Sign out
+  signOutBtn.addEventListener('click', async () => {
+    await signOut(auth);
+  });
+
+  // Handle auth state changes
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    if (user) {
+      loginStatus.textContent = `Signed in as: ${user.email}`;
+      signInBtn.style.display = "none";
+      signOutBtn.style.display = "inline-block";
+
+      // Check if user has setup data
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists()) {
+        // Show setup popup if no data
+        showSetupPopup();
+      } else {
+        // Optionally load user data into UI here
+        hideSetupPopup();
+      }
+    } else {
+      loginStatus.textContent = "Not signed in";
+      signInBtn.style.display = "inline-block";
+      signOutBtn.style.display = "none";
+      hideSetupPopup();
+    }
+  });
+
+  function showSetupPopup() {
+    setupPopup.style.display = 'block';
   }
-}
 
-// ---------- ROOM LINK COPY ----------
-copyLinkBtn.onclick = ()=>{
-  if(!currentRoom) return;
-  const url = window.location.origin + window.location.pathname + '#/room/' + currentRoom;
-  navigator.clipboard.writeText(url).then(()=> alert('Copied link!'));
-}
-
-// ---------- Utility: load room if URL has hash / room id ----------
-function checkHash(){
-  const h = window.location.hash;
-  if(h.startsWith('#/room/')){
-    const id = h.split('/')[2];
-    if(id) joinRoom(id);
+  function hideSetupPopup() {
+    setupPopup.style.display = 'none';
   }
-}
-window.addEventListener('load', checkHash);
-window.addEventListener('hashchange', checkHash);
 
-// ---------- Basic admin action example: delete room (if user isAdmin) ----------
-async function tryDeleteRoom(roomId){
-  const uref = doc(db, 'users', uid());
-  const udoc = await getDoc(uref);
-  if(!udoc.exists() || !udoc.data().isAdmin) return alert('Admin only');
-  if(!confirm('Delete room and all messages?')) return;
-  // delete messages (firestore batch deletion would be needed; for brevity we delete messages one by one)
-  const mcol = collection(db, 'rooms', roomId, 'messages');
-  const ms = await getDocs(mcol);
-  for(const d of ms.docs){ await deleteDoc(doc(db, 'rooms', roomId, 'messages', d.id)).catch(()=>{}); }
-  await deleteDoc(doc(db, 'rooms', roomId)).catch(()=>{});
-}
+  saveBtn.addEventListener('click', async () => {
+    if (!currentUser) {
+      alert("You must be signed in to save your profile.");
+      return;
+    }
+    const username = usernameInput.value.trim();
+    if (!username) {
+      alert("Username cannot be empty.");
+      return;
+    }
+    const bio = bioInput.value.trim();
+    const location = locationInput.value.trim();
+    const status = statusSelect.value;
 
-// ---------- END of module ----------
+    // Save to Firestore
+    try {
+      await setDoc(doc(db, "users", currentUser.uid), {
+        username,
+        bio,
+        location,
+        status
+      });
+      alert("Profile saved!");
+      hideSetupPopup();
+    } catch (err) {
+      alert("Failed to save profile: " + err.message);
+    }
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    hideSetupPopup();
+  });
+
+  // Room joining logic: Only join if signed in
+  document.querySelectorAll('.room-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!currentUser) {
+        alert("You must sign in to join a room.");
+        return;
+      }
+      const roomId = link.dataset.roomId;
+      alert(`Joining room: ${roomId}`); 
+      // Replace alert with your room join logic
+    });
+  });
 </script>
 </body>
 </html>
